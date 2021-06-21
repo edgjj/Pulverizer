@@ -1,0 +1,4 @@
+[submodule "Kraps"]
+	path = Kraps
+	url = https://github.com/edgjj/Kraps.git
+	branch = simd
