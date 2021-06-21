@@ -1,0 +1,29 @@
+language: cpp
+os: osx
+osx_image: xcode12.5
+compiler: clang
+
+before_install:
+- if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew update; fi
+script:
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then cd "./Builds/MacOSX"; fi
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then xcodebuild -project Pulverizer.xcodeproj ARCHS=x86_64 ONLY_ACTIVE_ARCH=NO -configuration Release build; fi
+- cd ./../.. 
+
+after_success:
+- export VERSION=$(git describe --tags)
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then export DEPLOYFILE=Pulverizer-$VERSION.dmg; fi
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then mkdir ./output; fi
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then cp -r ./Builds/MacOSX/build/Release/* ./output/; fi
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then hdiutil create /tmp/tmp.dmg -ov -volname "Pulverizer-$VERSION" -fs HFS+ -srcfolder "./output/"; fi
+- if [ "$TRAVIS_OS_NAME" == "osx"   ]; then hdiutil convert /tmp/tmp.dmg -format UDZO -o ./$DEPLOYFILE; fi
+deploy:
+  provider: releases
+  api_key:
+    secure: "JGX4S0SXOtboS5ierzmNPsYHu9fqJCy8RLcjBAUAm/FbkvCi9bFlzG0d0j/pz36qpB+Pu7iw3OCAipgeK9qQMqcLRyn4b7qUOeTpczSsXjGPr8mYJFkl+nc3Ws4zt077Qe5ZM9yOGYgwKA2KhDZ80qyc15zmq/lJuUNkW7oJ+e9HAnTT0WonB+WgGtJcpKieV2JVYXB+t1fBc7nHLjsJlvLJs8rfj8mnknwGUSzfAgQdyWYy/YyR9sT88sWUaeh2mAtHaKsbu8CBw1n16Mbp69YgwzsDzKkn+ylwiXDWi1jjHNTpz81Q8DvVy/8TASipY4MBPwvSiWDQ7gjTnZBbcqVhQtGn/1wrOjtoxB2iyWLJEtpkws933gUlcfXB7/aVBYayeMpRN5OmSNFoIWAklqnGenRqelpHqF2BBUoKPbMPkxSKn72d/7gGs/sOyQIywOCeQeUATbRj2HLWUgo5+l2pI9zLvDGJBgy7gc2px6Yvs2fp4HdL86EGU+WBjpaUjvdfoaCEJgF7jdTcxFAnZ8cDVgwWxgqBYAkTjUdnbJ8jZnKC4D/XK+2Wz8kU12Lg+EWs3pQQRuKEJnFOoVCHgFLMZb/P2SaIiND8exyTFiPD6Dchw7tgmGlYGGomKJTsdUb+VSOr9B+MvrvsDgaET6hjseFYRckT+bxsw/hV9rw="
+  file: "$DEPLOYFILE"
+  skip_cleanup: true
+  on:
+    repo: edgjj/Pulverizer
+    tags: true
+
