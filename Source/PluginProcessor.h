@@ -1,14 +1,26 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
+/* Copyright 2021 Yegor Suslin
+ *
+ * This file is part of Pulverizer.
+ *
+ * Kraps is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Kraps is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Pulverizer.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #pragma once
 
 #include <JuceHeader.h>
+#include "dsp/pulverizer_single.hpp"
+#include "../Kraps/processor/processor_matrix.hpp"
 
 //==============================================================================
 /**
@@ -53,7 +65,20 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+
 private:
+    void preprocess_vals();
+
+    juce::AudioProcessorValueTreeState parameters;
+
+    kraps::filters::PulverizerSingle proc;
+    kraps::OutputProcessor out_p;
+
+    kraps::io::Output out_k = kraps::io::Output(0);
+
+
+
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PulverizerAudioProcessor)
 };

@@ -1,13 +1,22 @@
-/*
-  ==============================================================================
-
-    This file contains the basic framework code for a JUCE plugin processor.
-
-  ==============================================================================
-*/
+/* Copyright 2021 Yegor Suslin
+ *
+ * This file is part of Pulverizer.
+ *
+ * Kraps is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Kraps is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Pulverizer.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "PluginProcessor.h"
-#include "PluginEditor.h"
 
 //==============================================================================
 PulverizerAudioProcessor::PulverizerAudioProcessor()
@@ -19,13 +28,23 @@ PulverizerAudioProcessor::PulverizerAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ),
+    parameters(*this, nullptr, juce::Identifier("Pulverizer"), {
+            std::make_unique<juce::AudioParameterInt>("amount", "Amount", 0, 100, 8),
+            std::make_unique<juce::AudioParameterFloat>("frequency", "Frequency", 50.0f, 8000.0f, 400.0f),
+            std::make_unique<juce::AudioParameterFloat>("q_fac", "Q", 0.5f, 16.f, 0.5f),
+            std::make_unique<juce::AudioParameterBool>("is_x2", "Perform x2", false),
+            
+        })
 #endif
 {
+    proc.plug(&out_k, 0);
+    out_p.plug(&proc, 0, 0);
 }
 
 PulverizerAudioProcessor::~PulverizerAudioProcessor()
 {
+    proc.unplug();
 }
 
 //==============================================================================
@@ -93,8 +112,7 @@ void PulverizerAudioProcessor::changeProgramName (int index, const juce::String&
 //==============================================================================
 void PulverizerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    proc.set_SR(sampleRate);
 }
 
 void PulverizerAudioProcessor::releaseResources()
@@ -110,10 +128,7 @@ bool PulverizerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
     juce::ignoreUnused (layouts);
     return true;
   #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
+
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
@@ -129,58 +144,78 @@ bool PulverizerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
+void PulverizerAudioProcessor::preprocess_vals()
+{
+    auto& pt = proc.get_parameter_table();
+
+    pt.set_value("frequency", parameters.getRawParameterValue("frequency")->load());
+    pt.set_value("res", parameters.getRawParameterValue("q_fac")->load());
+    pt.set_value("amount", parameters.getRawParameterValue("amount")->load());
+    pt.set_value("is_x2", parameters.getRawParameterValue("is_x2")->load());
+
+
+}
+
 void PulverizerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+   
+    const float** i_buf = buffer.getArrayOfReadPointers();
+    float** o_buf = buffer.getArrayOfWritePointers();
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    preprocess_vals();
+
+    float d[2];
+
+    for (int s = 0; s < buffer.getNumSamples(); ++s)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        d[0] = i_buf[0][s];
+        d[1] = i_buf[1][s];
 
-        // ..do something to the data...
+        out_k.val = kraps::float8::loadu(d, 2);
+
+        proc.process();
+        out_p.process();
+
+        out_p.get_sample().storeu(d, 2);
+
+        o_buf[0][s] = d[0];
+        o_buf[1][s] = d[1];
     }
+
 }
 
 //==============================================================================
 bool PulverizerAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return false; 
 }
 
 juce::AudioProcessorEditor* PulverizerAudioProcessor::createEditor()
 {
-    return new PulverizerAudioProcessorEditor (*this);
+    return nullptr;
 }
 
 //==============================================================================
 void PulverizerAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    auto state = parameters.copyState();
+    std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    copyXmlToBinary(*xml, destData);
 }
 
 void PulverizerAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    std::unique_ptr<juce::XmlElement> xmlState(getXmlFromBinary(data, sizeInBytes));
+
+    if (xmlState.get() != nullptr)
+        if (xmlState->hasTagName(parameters.state.getType()))
+            parameters.replaceState(juce::ValueTree::fromXml(*xmlState));
 }
 
 //==============================================================================
