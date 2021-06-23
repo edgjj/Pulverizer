@@ -137,6 +137,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\PluginEditor.cpp"/>
     <ClCompile Include="..\..\Kraps\processor\processor.cpp"/>
     <ClCompile Include="..\..\Source\dsp\pulverizer_single.cpp"/>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp"/>
@@ -1847,6 +1848,8 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_gui_extra.cpp"/>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\CustomL&amp;F.h"/>
+    <ClInclude Include="..\..\Source\PluginEditor.h"/>
     <ClInclude Include="..\..\Kraps\processor\processor.hpp"/>
     <ClInclude Include="..\..\Source\dsp\pulverizer_single.hpp"/>
     <ClInclude Include="..\..\Source\PluginProcessor.h"/>

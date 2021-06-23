@@ -391,6 +391,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\PluginEditor.cpp">
+      <Filter>Pulverizer\Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Kraps\processor\processor.cpp">
       <Filter>Pulverizer\Source\dsp</Filter>
     </ClCompile>
@@ -2223,6 +2226,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\CustomL&amp;F.h">
+      <Filter>Pulverizer\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\PluginEditor.h">
+      <Filter>Pulverizer\Source</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Kraps\processor\processor.hpp">
       <Filter>Pulverizer\Source\dsp</Filter>
     </ClInclude>

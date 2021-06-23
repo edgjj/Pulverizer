@@ -17,6 +17,7 @@
  */
 
 #include "PluginProcessor.h"
+#include "PluginEditor.h"
 
 //==============================================================================
 PulverizerAudioProcessor::PulverizerAudioProcessor()
@@ -193,12 +194,12 @@ void PulverizerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 //==============================================================================
 bool PulverizerAudioProcessor::hasEditor() const
 {
-    return false; 
+    return true; 
 }
 
 juce::AudioProcessorEditor* PulverizerAudioProcessor::createEditor()
 {
-    return nullptr;
+    return new PulverizerPluginEditor(*this, parameters);
 }
 
 //==============================================================================

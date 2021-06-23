@@ -7,6 +7,10 @@
               cppLanguageStandard="17" defines="_USE_MATH_DEFINES">
   <MAINGROUP id="q5Jw0J" name="Pulverizer">
     <GROUP id="{A116831B-A7B3-5C26-1C5C-8CEBC419E9A1}" name="Source">
+      <FILE id="OxaiAC" name="CustomL&amp;F.h" compile="0" resource="0" file="Source/CustomL&amp;F.h"/>
+      <FILE id="y8EhLI" name="PluginEditor.cpp" compile="1" resource="0"
+            file="Source/PluginEditor.cpp"/>
+      <FILE id="xIKKHM" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
       <GROUP id="{E5C7E12E-FDA6-3EFE-9854-71674ACD5051}" name="dsp">
         <FILE id="Co0SIc" name="processor.cpp" compile="1" resource="0" file="Kraps/processor/processor.cpp"/>
         <FILE id="AzJC76" name="processor.hpp" compile="0" resource="0" file="Kraps/processor/processor.hpp"/>
